@@ -213,11 +213,6 @@ int git__strntol32(int32_t *result, const char *nptr, size_t nptr_len, const cha
 	return error;
 }
 
-int git__strcmp(const char *a, const char *b)
-{
-	return strcmp(a, b);
-}
-
 int git__strcasecmp(const char *a, const char *b)
 {
 	while (*a && *b && git__tolower(*a) == git__tolower(*b))
@@ -245,11 +240,6 @@ int git__strcasesort_cmp(const char *a, const char *b)
 		return (unsigned char)git__tolower(*a) - (unsigned char)git__tolower(*b);
 
 	return cmp;
-}
-
-int git__strncmp(const char *a, const char *b, size_t sz)
-{
-	return strncmp(a, b, sz);
 }
 
 int git__strncasecmp(const char *a, const char *b, size_t sz)
