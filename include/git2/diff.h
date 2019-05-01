@@ -168,6 +168,9 @@ typedef enum {
 	 *  can apply given diff information to binary files.
 	 */
 	GIT_DIFF_SHOW_BINARY = (1u << 30),
+
+	/** Include only the first delta of each type. */
+	GIT_DIFF_EXEMPLARS = (1u << 31),
 } git_diff_option_t;
 
 /**
