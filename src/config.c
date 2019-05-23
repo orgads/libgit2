@@ -348,7 +348,7 @@ typedef struct {
 	git_config_iterator parent;
 	git_config_iterator *current;
 	const git_config *cfg;
-	regex_t regex;
+	p_regex_t regex;
 	size_t i;
 } all_iter;
 
@@ -426,7 +426,7 @@ static int all_iter_glob_next(git_config_entry **entry, git_config_iterator *_it
 	 */
 	while ((error = all_iter_next(entry, _iter)) == 0) {
 		/* skip non-matching keys if regexp was provided */
-		if (regexec(&iter->regex, (*entry)->name, 0, NULL, 0) != 0)
+		if (p_regexec(&iter->regex, (*entry)->name, 0, NULL, 0) != 0)
 			continue;
 
 		/* and simply return if we like the entry's name */
@@ -450,7 +450,7 @@ static void all_iter_glob_free(git_config_iterator *_iter)
 {
 	all_iter *iter = (all_iter *) _iter;
 
-	regfree(&iter->regex);
+	p_regfree(&iter->regex);
 	all_iter_free(_iter);
 }
 
@@ -483,7 +483,7 @@ int git_config_iterator_glob_new(git_config_iterator **out, const git_config *cf
 	iter = git__calloc(1, sizeof(all_iter));
 	GIT_ERROR_CHECK_ALLOC(iter);
 
-	if ((result = p_regcomp(&iter->regex, regexp, REG_EXTENDED)) != 0) {
+	if ((result = p_regcomp(&iter->regex, regexp, P_REG_EXTENDED)) != 0) {
 		git_error_set_regex(&iter->regex, result);
 		git__free(iter);
 		return -1;
@@ -513,15 +513,15 @@ int git_config_backend_foreach_match(
 {
 	git_config_entry *entry;
 	git_config_iterator* iter;
-	regex_t regex;
+	p_regex_t regex;
 	int error = 0;
 
 	assert(backend && cb);
 
 	if (regexp != NULL) {
-		if ((error = p_regcomp(&regex, regexp, REG_EXTENDED)) != 0) {
+		if ((error = p_regcomp(&regex, regexp, P_REG_EXTENDED)) != 0) {
 			git_error_set_regex(&regex, error);
-			regfree(&regex);
+			p_regfree(&regex);
 			return -1;
 		}
 	}
@@ -533,7 +533,7 @@ int git_config_backend_foreach_match(
 
 	while (!(iter->next(&entry, iter) < 0)) {
 		/* skip non-matching keys if regexp was provided */
-		if (regexp && regexec(&regex, entry->name, 0, NULL, 0) != 0)
+		if (regexp && p_regexec(&regex, entry->name, 0, NULL, 0) != 0)
 			continue;
 
 		/* abort iterator on non-zero return value */
@@ -544,7 +544,7 @@ int git_config_backend_foreach_match(
 	}
 
 	if (regexp != NULL)
-		regfree(&regex);
+		p_regfree(&regex);
 
 	iter->free(iter);
 
@@ -984,7 +984,7 @@ typedef struct {
 	git_config_iterator parent;
 	git_config_iterator *iter;
 	char *name;
-	regex_t regex;
+	p_regex_t regex;
 	int have_regex;
 } multivar_iter;
 
@@ -1000,7 +1000,7 @@ static int multivar_iter_next(git_config_entry **entry, git_config_iterator *_it
 		if (!iter->have_regex)
 			return 0;
 
-		if (regexec(&iter->regex, (*entry)->value, 0, NULL, 0) == 0)
+		if (p_regexec(&iter->regex, (*entry)->value, 0, NULL, 0) == 0)
 			return 0;
 	}
 
@@ -1015,7 +1015,7 @@ void multivar_iter_free(git_config_iterator *_iter)
 
 	git__free(iter->name);
 	if (iter->have_regex)
-		regfree(&iter->regex);
+		p_regfree(&iter->regex);
 	git__free(iter);
 }
 
@@ -1035,11 +1035,11 @@ int git_config_multivar_iterator_new(git_config_iterator **out, const git_config
 		goto on_error;
 
 	if (regexp != NULL) {
-		error = p_regcomp(&iter->regex, regexp, REG_EXTENDED);
+		error = p_regcomp(&iter->regex, regexp, P_REG_EXTENDED);
 		if (error != 0) {
 			git_error_set_regex(&iter->regex, error);
 			error = -1;
-			regfree(&iter->regex);
+			p_regfree(&iter->regex);
 			goto on_error;
 		}
 
