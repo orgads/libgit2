@@ -169,7 +169,9 @@ typedef enum {
 	 */
 	GIT_DIFF_SHOW_BINARY = (1u << 30),
 
-	/** Include only the first delta of each type. */
+	/** Change the way the result of git_diff_notify_cb is interpreted.
+   *  See comments above git_diff_notify_cb.
+   */
 	GIT_DIFF_EXEMPLARS = (1u << 31),
 } git_diff_option_t;
 
@@ -318,18 +320,30 @@ typedef struct {
 	git_diff_file new_file;
 } git_diff_delta;
 
+enum {
+  GIT_DIFF_DELTA_DO_NOT_INSERT = 1,
+  GIT_DIFF_DELTA_SKIP_TYPE = 2,
+};
+
 /**
  * Diff notification callback function.
  *
  * The callback will be called for each file, just before the `git_diff_delta`
  * gets inserted into the diff.
  *
- * When the callback:
- * - returns < 0, the diff process will be aborted.
- * - returns > 0, the delta will not be inserted into the diff, but the
- *		diff process continues.
- * - returns 0, the delta is inserted into the diff, and the diff process
- *		continues.
+ * Normal mode:
+ *   When the callback:
+ *     - returns < 0, the diff process will be aborted.
+ *     - returns > 0, the delta will not be inserted into the diff, but the
+ *	    	diff process continues.
+ *     - returns 0, the delta is inserted into the diff, and the diff process
+ *		   continues.
+ *
+ * With GIT_DIFF_EXEMPLARS set:
+ *   When the callback returns n:
+ *     - n < 0 => abort.
+ *     - (n & GIT_DIFF_DELTA_DO_NOT_INSERT) <=> do not insert.
+ *     - (n & GIT_DIFF_DELTA_SKIP_TYPE) <=> do not notify on future diffs of the same type.
  */
 typedef int GIT_CALLBACK(git_diff_notify_cb)(
 	const git_diff *diff_so_far,
