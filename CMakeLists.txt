@@ -42,6 +42,7 @@ INCLUDE(EnableWarnings)
 
 # Build options
 #
+OPTION(ZERO_NSEC		"Hint that index produced by the 'git' binary may have zero nsec components in all timestamps"			 OFF)
 OPTION(SONAME				"Set the (SO)VERSION of the target"			 ON)
 OPTION(BUILD_SHARED_LIBS		"Build Shared Library (OFF for Static)"			 ON)
 OPTION(THREADSAFE			"Build libgit2 as threadsafe"				 ON)
