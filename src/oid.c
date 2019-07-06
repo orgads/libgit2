@@ -54,7 +54,20 @@ int git_oid_fromstrp(git_oid *out, const char *str)
 
 int git_oid_fromstr(git_oid *out, const char *str)
 {
-	return git_oid_fromstrn(out, str, GIT_OID_HEXSZ);
+  int mask = 0, v;
+	unsigned char* oid = out->id, *end = oid + GIT_OID_RAWSZ;
+
+  do {
+    v = git__fromhex(str[0]) << 4 | git__fromhex(str[1]);
+    mask |= v;
+		*oid++ = v;
+		str += 2;
+	} while (oid != end);
+
+	if (mask < 0)
+		return oid_error_invalid("contains invalid characters");
+
+	return 0;
 }
 
 GIT_INLINE(char) *fmt_one(char *str, unsigned int val)
