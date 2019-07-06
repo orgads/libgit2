@@ -17,6 +17,8 @@
 #include "reflog.h"
 #include "posix.h"
 
+bool git_refdb__disable_reading_packed_tags = false;
+
 int git_refdb_new(git_refdb **out, git_repository *repo)
 {
 	git_refdb *db;
