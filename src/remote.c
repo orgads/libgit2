@@ -136,35 +136,6 @@ cleanup:
 	return 0;
 }
 
-#if 0
-/* We could export this as a helper */
-static int get_check_cert(int *out, git_repository *repo)
-{
-	git_config *cfg;
-	const char *val;
-	int error = 0;
-
-	assert(out && repo);
-
-	/* By default, we *DO* want to verify the certificate. */
-	*out = 1;
-
-	/* Go through the possible sources for SSL verification settings, from
-	 * most specific to least specific. */
-
-	/* GIT_SSL_NO_VERIFY environment variable */
-	if ((val = p_getenv("GIT_SSL_NO_VERIFY")) != NULL)
-		return git_config_parse_bool(out, val);
-
-	/* http.sslVerify config setting */
-	if ((error = git_repository_config__weakptr(&cfg, repo)) < 0)
-		return error;
-
-	*out = git_config__get_bool_force(cfg, "http.sslverify", 1);
-	return 0;
-}
-#endif
-
 static int canonicalize_url(git_buf *out, const char *in)
 {
 	if (in == NULL || strlen(in) == 0) {
@@ -217,11 +188,16 @@ static int ensure_remote_doesnot_exist(git_repository *repo, const char *name)
 	return GIT_EEXISTS;
 }
 
-int git_remote_create_init_options(git_remote_create_options *opts, unsigned int version)
+int git_remote_create_options_init(git_remote_create_options *opts, unsigned int version)
 {
 	GIT_INIT_STRUCTURE_FROM_TEMPLATE(
 		opts, version, git_remote_create_options, GIT_REMOTE_CREATE_OPTIONS_INIT);
 	return 0;
+}
+
+int git_remote_create_init_options(git_remote_create_options *opts, unsigned int version)
+{
+	return git_remote_create_options_init(opts, version);
 }
 
 int git_remote_create_with_opts(git_remote **out, const char *url, const git_remote_create_options *opts)

@@ -285,7 +285,7 @@ int git_sortedcache_upsert(void **out, git_sortedcache *sc, const char *key)
 	itemlen = sc->item_path_offset + keylen + 1;
 	itemlen = (itemlen + 7) & ~7;
 
-	if ((*v = git_pool_malloc(&sc->pool, (uint32_t)itemlen)) == NULL) {
+	if ((*v = git_pool_malloc(&sc->pool, itemlen)) == NULL) {
 		/* don't use GIT_ERROR_CHECK_ALLOC b/c of lock */
 		error = -1;
     git_strmap_delete(sc->map, key);
