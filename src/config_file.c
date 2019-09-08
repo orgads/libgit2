@@ -255,18 +255,7 @@ static int config_iterator_new(
 	struct git_config_backend *backend)
 {
 	config_file_backend *b = GIT_CONTAINER_OF(backend, config_file_backend, parent);
-	git_config_entries *entries = NULL;
-	int error;
-
-	if ((error = config_refresh(backend)) < 0 ||
-	    (error = git_config_entries_dup(&entries, b->entries)) < 0 ||
-	    (error = git_config_entries_iterator_new(iter, entries)) < 0)
-		goto out;
-
-out:
-	/* Let iterator delete duplicated entries when it's done */
-	git_config_entries_free(entries);
-	return error;
+	return git_config_entries_iterator_new(iter, b->entries);
 }
 
 static int config_set(git_config_backend *cfg, const char *name, const char *value)
@@ -329,9 +318,6 @@ static int config_get(git_config_backend *cfg, const char *key, git_config_entry
 	git_config_entries *entries = NULL;
 	git_config_entry *entry;
 	int error = 0;
-
-	if (!h->parent.readonly && ((error = config_refresh(cfg)) < 0))
-		return error;
 
 	if ((entries = diskfile_entries_take(h)) == NULL)
 		return -1;
@@ -508,6 +494,7 @@ int git_config_backend_from_file(git_config_backend **out, const char *path)
 	backend->parent.snapshot = git_config_backend_snapshot;
 	backend->parent.lock = config_lock;
 	backend->parent.unlock = config_unlock;
+	backend->parent.refresh = config_refresh;
 	backend->parent.free = backend_free;
 
 	*out = (git_config_backend *)backend;

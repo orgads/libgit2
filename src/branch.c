@@ -399,6 +399,22 @@ int git_branch_upstream_name(
 	git_repository *repo,
 	const char *refname)
 {
+	int error = -1;
+	git_remote *remote = NULL;
+
+	if ((error = git_branch_remote(&remote, out, repo, refname)) < 0)
+		return error;
+
+	git_remote_free(remote);
+	return 0;
+}
+
+int git_branch_remote(
+	git_remote** remote_out,
+	git_buf* name_out,
+	git_repository *repo,
+	const char *refname)
+{
 	git_buf remote_name = GIT_BUF_INIT;
 	git_buf merge_name = GIT_BUF_INIT;
 	git_buf buf = GIT_BUF_INIT;
@@ -407,14 +423,14 @@ int git_branch_upstream_name(
 	const git_refspec *refspec;
 	git_config *config;
 
-	assert(out && refname);
+	assert(remote_out && name_out && repo && refname);
 
-	git_buf_sanitize(out);
+	git_buf_sanitize(name_out);
 
 	if (!git_reference__is_branch(refname))
 		return not_a_local_branch(refname);
 
-	if ((error = git_repository_config_snapshot(&config, repo)) < 0)
+	if ((error = git_repository_config(&config, repo)) < 0)
 		return error;
 
 	if ((error = retrieve_upstream_configuration(
@@ -448,7 +464,11 @@ int git_branch_upstream_name(
 		if (git_buf_set(&buf, git_buf_cstr(&merge_name), git_buf_len(&merge_name)) < 0)
 			goto cleanup;
 
-	error = git_buf_set(out, git_buf_cstr(&buf), git_buf_len(&buf));
+	if ((error = git_buf_set(name_out, git_buf_cstr(&buf), git_buf_len(&buf))) < 0)
+		goto cleanup;
+
+	*remote_out = remote;
+	remote = NULL;
 
 cleanup:
 	git_config_free(config);

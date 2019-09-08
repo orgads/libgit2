@@ -190,6 +190,12 @@ static void config_memory_free(git_config_backend *_backend)
 	git__free(backend);
 }
 
+static int config_memory_refresh(git_config_backend *cfg)
+{
+	(void)cfg;
+	return 0;
+}
+
 int git_config_backend_from_string(git_config_backend **out, const char *cfg, size_t len)
 {
 	config_memory_backend *backend;
@@ -220,6 +226,7 @@ int git_config_backend_from_string(git_config_backend **out, const char *cfg, si
 	backend->parent.lock = config_memory_lock;
 	backend->parent.unlock = config_memory_unlock;
 	backend->parent.snapshot = config_memory_snapshot;
+	backend->parent.refresh = config_memory_refresh;
 	backend->parent.free = config_memory_free;
 
 	*out = (git_config_backend *)backend;

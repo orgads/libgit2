@@ -839,7 +839,7 @@ int git_repository_open_ext(
 	 * care if it's not there, so we need to deal with that.
 	 */
 
-	error = git_repository_config_snapshot(&config, repo);
+	error = git_repository_config(&config, repo);
 	if (error < 0 && error != GIT_ENOTFOUND)
 		goto cleanup;
 
@@ -1063,6 +1063,9 @@ int git_repository_config_snapshot(git_config **out, git_repository *repo)
 	git_config *weak;
 
 	if ((error = git_repository_config__weakptr(&weak, repo)) < 0)
+		return error;
+
+	if ((error = git_config_refresh(weak)) < 0)
 		return error;
 
 	return git_config_snapshot(out, weak);
