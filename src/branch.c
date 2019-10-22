@@ -458,10 +458,10 @@ int git_branch_remote(
 			goto cleanup;
 		}
 
-		if (git_refspec_transform(&buf, refspec, git_buf_cstr(&merge_name)) < 0)
+		if ((error = git_refspec_transform(&buf, refspec, git_buf_cstr(&merge_name))) < 0)
 			goto cleanup;
 	} else
-		if (git_buf_set(&buf, git_buf_cstr(&merge_name), git_buf_len(&merge_name)) < 0)
+		if ((error = git_buf_set(&buf, git_buf_cstr(&merge_name), git_buf_len(&merge_name))) < 0)
 			goto cleanup;
 
 	if ((error = git_buf_set(name_out, git_buf_cstr(&buf), git_buf_len(&buf))) < 0)
