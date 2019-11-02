@@ -445,8 +445,7 @@ static int find_repo(
 	git_buf common_link = GIT_BUF_INIT;
 	struct stat st;
 	dev_t initial_device = 0;
-	int min_iterations;
-	bool in_dot_git;
+	int min_iterations = 1;
 	size_t ceiling_offset = 0;
 
 	git_buf_clear(gitdir_path);
@@ -455,29 +454,11 @@ static int find_repo(
 	if (error < 0)
 		return error;
 
-	/* in_dot_git toggles each loop:
-	 * /a/b/c/.git, /a/b/c, /a/b/.git, /a/b, /a/.git, /a
-	 * With GIT_REPOSITORY_OPEN_BARE or GIT_REPOSITORY_OPEN_NO_DOTGIT, we
-	 * assume we started with /a/b/c.git and don't append .git the first
-	 * time through.
-	 * min_iterations indicates the number of iterations left before going
-	 * further counts as a search. */
-	if (flags & (GIT_REPOSITORY_OPEN_BARE | GIT_REPOSITORY_OPEN_NO_DOTGIT)) {
-		in_dot_git = true;
-		min_iterations = 1;
-	} else {
-		in_dot_git = false;
-		min_iterations = 2;
-	}
-
 	for (;;) {
 		if (!(flags & GIT_REPOSITORY_OPEN_NO_DOTGIT)) {
-			if (!in_dot_git) {
-				error = git_buf_joinpath(&path, path.ptr, DOT_GIT);
-				if (error < 0)
-					break;
-			}
-			in_dot_git = !in_dot_git;
+			error = git_buf_joinpath(&path, path.ptr, DOT_GIT);
+			if (error < 0)
+				break;
 		}
 
 		if (p_stat(path.ptr, &st) == 0) {
@@ -518,10 +499,12 @@ static int find_repo(
 			}
 		}
 
-		/* Move up one directory. If we're in_dot_git, we'll search the
-		 * parent itself next. If we're !in_dot_git, we'll search .git
-		 * in the parent directory next (added at the top of the loop). */
 		if (git_path_dirname_r(&path, path.ptr) < 0) {
+			error = -1;
+			break;
+		}
+		if (!(flags & GIT_REPOSITORY_OPEN_NO_DOTGIT) &&
+				git_path_dirname_r(&path, path.ptr) < 0) {
 			error = -1;
 			break;
 		}
