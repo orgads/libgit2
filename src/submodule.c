@@ -1472,7 +1472,7 @@ static int git_submodule__open(
 {
 	int error;
 	git_buf path = GIT_BUF_INIT;
-	unsigned int flags = GIT_REPOSITORY_OPEN_NO_SEARCH;
+	unsigned int flags = GIT_REPOSITORY_OPEN_NO_SEARCH | GIT_REPOSITORY_OPEN_NO_DOTGIT;
 	const char *wd;
 
 	assert(sm && subrepo);
