@@ -911,12 +911,19 @@ int git_repository_discover(
 	int across_fs,
 	const char *ceiling_dirs)
 {
-	uint32_t flags = across_fs ? GIT_REPOSITORY_OPEN_CROSS_FS : 0;
+	return git_repository_discover_ex(
+		out, start_path, across_fs ? GIT_REPOSITORY_OPEN_CROSS_FS : 0,
+		ceiling_dirs);
+}
 
+int git_repository_discover_ex(
+	git_buf *out,
+	const char *start_path,
+	uint32_t flags,
+	const char *ceiling_dirs)
+{
 	assert(start_path);
-
 	git_buf_sanitize(out);
-
 	return find_repo(out, NULL, NULL, NULL, start_path, flags, ceiling_dirs);
 }
 

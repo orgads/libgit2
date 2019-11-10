@@ -92,6 +92,12 @@ GIT_EXTERN(int) git_repository_discover(
 		int across_fs,
 		const char *ceiling_dirs);
 
+GIT_EXTERN(int) git_repository_discover_ex(
+		git_buf *out,
+		const char *start_path,
+		uint32_t flags,
+		const char *ceiling_dirs);
+
 /**
  * Option flags for `git_repository_open_ext`.
  */
