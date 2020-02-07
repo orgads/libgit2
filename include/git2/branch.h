@@ -194,6 +194,13 @@ GIT_EXTERN(int) git_branch_remote(
 	git_repository *repo,
 	const char *refname);
 
+/* the same as remote_out but for branch.<name>.pushRemote */
+GIT_EXTERN(int) git_branch_push_remote(
+	git_remote** remote_out,
+	git_buf* name_out,
+	git_repository *repo,
+	const char *refname);
+
 /**
  * Return the reference supporting the remote tracking branch,
  * given a local branch reference.
