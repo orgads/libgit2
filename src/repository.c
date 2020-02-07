@@ -138,7 +138,7 @@ static void set_index(git_repository *repo, git_index *index)
 	}
 }
 
-void git_repository__cleanup(git_repository *repo)
+int git_repository__cleanup(git_repository *repo)
 {
 	assert(repo);
 
@@ -150,6 +150,8 @@ void git_repository__cleanup(git_repository *repo)
 	set_index(repo, NULL);
 	set_odb(repo, NULL);
 	set_refdb(repo, NULL);
+
+	return 0;
 }
 
 void git_repository_free(git_repository *repo)
@@ -848,8 +850,7 @@ cleanup:
 
 	if (error < 0)
 		git_repository_free(repo);
-
-	if (repo_ptr)
+	else if (repo_ptr)
 		*repo_ptr = repo;
 
 	return error;
@@ -1064,10 +1065,11 @@ int git_repository_config_snapshot(git_config **out, git_repository *repo)
 	return git_config_snapshot(out, weak);
 }
 
-void git_repository_set_config(git_repository *repo, git_config *config)
+int git_repository_set_config(git_repository *repo, git_config *config)
 {
 	assert(repo && config);
 	set_config(repo, config);
+	return 0;
 }
 
 int git_repository_odb__weakptr(git_odb **out, git_repository *repo)
@@ -1115,10 +1117,11 @@ int git_repository_odb(git_odb **out, git_repository *repo)
 	return 0;
 }
 
-void git_repository_set_odb(git_repository *repo, git_odb *odb)
+int git_repository_set_odb(git_repository *repo, git_odb *odb)
 {
 	assert(repo && odb);
 	set_odb(repo, odb);
+	return 0;
 }
 
 int git_repository_refdb__weakptr(git_refdb **out, git_repository *repo)
@@ -1155,10 +1158,11 @@ int git_repository_refdb(git_refdb **out, git_repository *repo)
 	return 0;
 }
 
-void git_repository_set_refdb(git_repository *repo, git_refdb *refdb)
+int git_repository_set_refdb(git_repository *repo, git_refdb *refdb)
 {
 	assert(repo && refdb);
 	set_refdb(repo, refdb);
+	return 0;
 }
 
 int git_repository_index__weakptr(git_index **out, git_repository *repo)
@@ -1204,10 +1208,11 @@ int git_repository_index(git_index **out, git_repository *repo)
 	return 0;
 }
 
-void git_repository_set_index(git_repository *repo, git_index *index)
+int git_repository_set_index(git_repository *repo, git_index *index)
 {
 	assert(repo);
 	set_index(repo, index);
+	return 0;
 }
 
 int git_repository_set_namespace(git_repository *repo, const char *namespace)
@@ -2538,7 +2543,7 @@ int git_repository_hashfile(
 	int error;
 	git_filter_list *fl = NULL;
 	git_file fd = -1;
-	git_off_t len;
+	uint64_t len;
 	git_buf full_path = GIT_BUF_INIT;
 
 	assert(out && path && repo); /* as_path can be NULL */
@@ -2575,11 +2580,8 @@ int git_repository_hashfile(
 		goto cleanup;
 	}
 
-	len = git_futils_filesize(fd);
-	if (len < 0) {
-		error = (int)len;
+	if ((error = git_futils_filesize(&len, fd)) < 0)
 		goto cleanup;
-	}
 
 	if (!git__is_sizet(len)) {
 		git_error_set(GIT_ERROR_OS, "file size overflow for 32-bit systems");

@@ -156,6 +156,42 @@ void test_patch_parse__binary_file_with_missing_paths(void)
 					  strlen(PATCH_BINARY_FILE_WITH_MISSING_PATHS), NULL));
 }
 
+void test_patch_parse__binary_file_with_whitespace_paths(void)
+{
+	git_patch *patch;
+	cl_git_fail(git_patch_from_buffer(&patch, PATCH_BINARY_FILE_WITH_WHITESPACE_PATHS,
+					  strlen(PATCH_BINARY_FILE_WITH_WHITESPACE_PATHS), NULL));
+}
+
+void test_patch_parse__binary_file_with_empty_quoted_paths(void)
+{
+	git_patch *patch;
+	cl_git_fail(git_patch_from_buffer(&patch, PATCH_BINARY_FILE_WITH_QUOTED_EMPTY_PATHS,
+					  strlen(PATCH_BINARY_FILE_WITH_QUOTED_EMPTY_PATHS), NULL));
+}
+
+void test_patch_parse__binary_file_path_with_spaces(void)
+{
+	git_patch *patch;
+	cl_git_fail(git_patch_from_buffer(&patch, PATCH_BINARY_FILE_PATH_WITH_SPACES,
+					  strlen(PATCH_BINARY_FILE_PATH_WITH_SPACES), NULL));
+}
+
+void test_patch_parse__binary_file_path_without_body_paths(void)
+{
+	git_patch *patch;
+	cl_git_fail(git_patch_from_buffer(&patch, PATCH_BINARY_FILE_PATH_WITHOUT_BODY_PATHS,
+					  strlen(PATCH_BINARY_FILE_PATH_WITHOUT_BODY_PATHS), NULL));
+}
+
+void test_patch_parse__binary_file_with_truncated_delta(void)
+{
+	git_patch *patch;
+	cl_git_fail(git_patch_from_buffer(&patch, PATCH_BINARY_FILE_WITH_TRUNCATED_DELTA,
+					  strlen(PATCH_BINARY_FILE_WITH_TRUNCATED_DELTA), NULL));
+	cl_assert_equal_s(git_error_last()->message, "truncated binary data at line 5");
+}
+
 void test_patch_parse__memory_leak_on_multiple_paths(void)
 {
 	git_patch *patch;
