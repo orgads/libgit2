@@ -414,6 +414,24 @@ int git_path_prettify(git_buf *path_out, const char *path, const char *base)
 	return git_buf_sets(path_out, buf);
 }
 
+int git_path_canonicalize(git_buf *path_out, const char *path, const char *base)
+{
+	int err = 0;
+	assert(path && path_out);
+
+	/* construct path if needed */
+	if (base != NULL && git_path_root(path) < 0) {
+		if (git_buf_joinpath(path_out, base, path) < 0)
+			return -1;
+	} else if ((err = git_buf_sets(path_out, path)) < 0) {
+		return err;
+	}
+
+	git_path_trim_slashes(path_out);
+	git_path_squash_slashes(path_out);
+	return 0;
+}
+
 int git_path_prettify_dir(git_buf *path_out, const char *path, const char *base)
 {
 	int error = git_path_prettify(path_out, path, base);

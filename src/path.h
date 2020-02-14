@@ -271,6 +271,13 @@ extern void git_path_squash_slashes(git_buf *path);
 extern int git_path_prettify(git_buf *path_out, const char *path, const char *base);
 
 /**
+ * The same as git_path_prettify (not quite, see below) but without resolving symlinks.
+ * 
+ * WARNING: Doesn't remove /./ or /../.
+ */
+extern int git_path_canonicalize(git_buf *path_out, const char *path, const char *base);
+
+/**
  * Clean up path, prepending base if it is not already rooted and
  * appending a slash.
  */

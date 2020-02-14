@@ -452,7 +452,9 @@ static int find_repo(
 
 	git_buf_clear(gitdir_path);
 
-	error = git_path_prettify(&path, start_path, NULL);
+	error = flags & GIT_REPOSITORY_OPEN_NO_SEARCH
+		? git_path_canonicalize(&path, start_path, NULL)
+		: git_path_prettify(&path, start_path, NULL);
 	if (error < 0)
 		return error;
 
