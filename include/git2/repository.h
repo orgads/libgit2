@@ -93,7 +93,10 @@ GIT_EXTERN(int) git_repository_discover(
 		const char *ceiling_dirs);
 
 GIT_EXTERN(int) git_repository_discover_ex(
-		git_buf *out,
+		git_buf *gitdir_path,
+		git_buf *workdir_path,
+		git_buf *gitlink_path,
+		git_buf *commondir_path,
 		const char *start_path,
 		uint32_t flags,
 		const char *ceiling_dirs);
