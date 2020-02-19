@@ -1345,6 +1345,39 @@ bool git_repository__reserved_names(
 }
 #endif
 
+static int check_extensions(git_config *config) {
+	int error = 0;
+	git_config_iterator *iter;
+	git_config_entry *entry;
+
+	if ((error = git_config_iterator_glob_new(&iter, config, "extensions\\..+")) < 0)
+		return error;
+
+	/*
+	 * !!! WARNING !!!
+	 *
+	 * Accepting preciousobjects is only safe within the context of gitstatusd because
+	 * it never modifies the repository.
+	 * 
+	 * !!! DO NOT UPSTREAM !!!
+	 * 
+	 */
+	while ((error = git_config_next(&entry, iter)) == 0) {
+		if (strcmp(entry->name, "extensions.noop") &&
+				strcmp(entry->name, "extensions.preciousobjects")) {
+			git_error_set(GIT_ERROR_REPOSITORY, "unsupported extension: %s", entry->name);
+			error = -1;
+			break;
+		}
+	}
+
+	if (error == GIT_ITEROVER)
+		error = 0;
+
+	git_config_iterator_free(iter);
+	return error;
+}
+
 static int check_repositoryformatversion(git_config *config)
 {
 	int version, error;
@@ -1357,12 +1390,15 @@ static int check_repositoryformatversion(git_config *config)
 	if (error < 0)
 		return -1;
 
-	if (GIT_REPO_VERSION < version) {
+	if (version > 1) {
 		git_error_set(GIT_ERROR_REPOSITORY,
-			"unsupported repository version %d. Only versions up to %d are supported.",
-			version, GIT_REPO_VERSION);
+			"unsupported repository version %d. Only versions up to 1 are supported.",
+			version);
 		return -1;
 	}
+
+	if (version == 1)
+		return check_extensions(config);
 
 	return 0;
 }
