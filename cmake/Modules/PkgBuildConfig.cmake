@@ -1,10 +1,5 @@
 # pkg-config file generation
 #
-# Uses the following globals:
-# - PKG_BUILD_PREFIX: the build location (aka prefix). Defaults to CMAKE_INSTALL_PREFIX
-# - PKG_BUILD_LIBDIR: the libdir location. Defaults to ${prefix}/lib.
-# - PKG_BUILD_INCLUDEDIR: the includedir location. Defaults to ${prefix}/include.
-#
 
 function(pkg_build_config)
     set(options)
@@ -29,37 +24,11 @@ function(pkg_build_config)
         message(FATAL_ERROR "Missing VERSION argument")
     endif()
 
-    if (DEFINED PKG_BUILD_PREFIX)
-        set(PKGCONFIG_PREFIX "${PKG_BUILD_PREFIX}")
-    else()
-        set(PKGCONFIG_PREFIX "${CMAKE_INSTALL_PREFIX}")
-    endif()
-
-    if(DEFINED PKG_BUILD_LIBDIR)
-        if (IS_ABSOLUTE ${PKG_BUILD_LIBDIR})
-            set(PKGCONFIG_LIBDIR ${PKG_BUILD_LIBDIR})
-        else()
-            set(PKGCONFIG_LIBDIR "\${prefix}/${PKG_BUILD_LIBDIR}")
-        endif()
-    else()
-        set(PKGCONFIG_LIBDIR "\${prefix}/lib")
-    endif()
-
-    if(DEFINED PKG_BUILD_INCLUDEDIR)
-        if (IS_ABSOLUTE ${PKG_BUILD_INCLUDEDIR})
-            set(PKGCONFIG_INCLUDEDIR ${PKG_BUILD_INCLUDEDIR})
-        else()
-            set(PKGCONFIG_INCLUDEDIR "\${prefix}/${PKG_BUILD_INCLUDEDIR}")
-        endif()
-    else()
-        set(PKGCONFIG_INCLUDEDIR "\${prefix}/include")
-    endif()
-
     # Write .pc "header"
     file(WRITE "${PKGCONFIG_FILE}"
-        "prefix=\"${PKGCONFIG_PREFIX}\"\n"
-        "libdir=\"${PKGCONFIG_LIBDIR}\"\n"
-        "includedir=\"${PKGCONFIG_INCLUDEDIR}\"\n"
+        "prefix=\"${CMAKE_INSTALL_PREFIX}\"\n"
+        "libdir=\"${CMAKE_INSTALL_FULL_LIBDIR}\"\n"
+        "includedir=\"${CMAKE_INSTALL_FULL_INCLUDEDIR}\"\n"
         "\n"
         "Name: ${PKGCONFIG_NAME}\n"
         "Description: ${PKGCONFIG_DESCRIPTION}\n"
@@ -104,7 +73,5 @@ function(pkg_build_config)
     file(APPEND "${PKGCONFIG_FILE}" "Cflags: -I\${includedir} ${PKGCONFIG_CFLAGS}\n")
 
     # Install .pc file
-    install(FILES "${PKGCONFIG_FILE}"
-        DESTINATION "${PKGCONFIG_PREFIX}/${PKGCONFIG_LIBDIR}/pkgconfig"
-    )
+    install(FILES "${PKGCONFIG_FILE}" DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 endfunction()

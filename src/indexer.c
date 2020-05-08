@@ -150,11 +150,11 @@ int git_indexer_new(
 	idx->progress_cb = opts.progress_cb;
 	idx->progress_payload = opts.progress_cb_payload;
 	idx->mode = mode ? mode : GIT_PACK_FILE_MODE;
-	git_hash_ctx_init(&idx->hash_ctx);
-	git_hash_ctx_init(&idx->trailer);
 	git_buf_init(&idx->entry_data, 0);
 
-	if ((error = git_oidmap_new(&idx->expected_oids)) < 0)
+	if ((error = git_hash_ctx_init(&idx->hash_ctx)) < 0 ||
+	    (error = git_hash_ctx_init(&idx->trailer)) < 0 ||
+	    (error = git_oidmap_new(&idx->expected_oids)) < 0)
 		goto cleanup;
 
 	idx->do_verify = opts.verify;
@@ -265,10 +265,11 @@ static int advance_delta_offset(git_indexer *idx, git_object_t type)
 	if (type == GIT_OBJECT_REF_DELTA) {
 		idx->off += GIT_OID_RAWSZ;
 	} else {
-		off64_t base_off = get_delta_base(idx->pack, &w, &idx->off, type, idx->entry_start);
+		off64_t base_off;
+		int error = get_delta_base(&base_off, idx->pack, &w, &idx->off, type, idx->entry_start);
 		git_mwindow_close(&w);
-		if (base_off < 0)
-			return (int)base_off;
+		if (error < 0)
+			return error;
 	}
 
 	return 0;
