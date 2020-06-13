@@ -37,44 +37,6 @@ static int git_sysdir_guess_system_dirs(git_buf *out)
 #endif
 }
 
-#ifndef GIT_WIN32
-static int get_passwd_home(git_buf *out, uid_t uid)
-{
-	struct passwd pwd, *pwdptr;
-	char *buf = NULL;
-	long buflen;
-	int error;
-
-	assert(out);
-
-	if ((buflen = sysconf(_SC_GETPW_R_SIZE_MAX)) == -1)
-		buflen = 1024;
-
-	do {
-		buf = git__realloc(buf, buflen);
-		error = getpwuid_r(uid, &pwd, buf, buflen, &pwdptr);
-		buflen *= 2;
-	} while (error == ERANGE && buflen <= 8192);
-
-	if (error) {
-		git_error_set(GIT_ERROR_OS, "failed to get passwd entry");
-		goto out;
-	}
-
-	if (!pwdptr) {
-		git_error_set(GIT_ERROR_OS, "no passwd entry found for user");
-		goto out;
-	}
-
-	if ((error = git_buf_puts(out, pwdptr->pw_dir)) < 0)
-		goto out;
-
-out:
-	git__free(buf);
-	return error;
-}
-#endif
-
 static int git_sysdir_guess_global_dirs(git_buf *out)
 {
 #ifdef GIT_WIN32
@@ -101,9 +63,13 @@ static int git_sysdir_guess_global_dirs(git_buf *out)
 	 * we have to get the HOME dir from the password entry file.
 	 */
 	if (!sandbox_id && uid == euid)
-	    error = git__getenv(out, "HOME");
+		error = git__getenv(out, "HOME");
 	else
-	    error = get_passwd_home(out, euid);
+		/*
+		 * DO NOT UPSTREAM. This is safe to do in gitstatus because it
+		 * sets HOME to the effective user's home directory.
+		 */
+		error = git__getenv(out, "HOME");
 
 	if (error == GIT_ENOTFOUND) {
 		git_error_clear();
@@ -137,7 +103,11 @@ static int git_sysdir_guess_xdg_dirs(git_buf *out)
 		if (error == GIT_ENOTFOUND && (error = git__getenv(&env, "HOME")) == 0)
 			error = git_buf_joinpath(out, env.ptr, ".config/git");
 	} else {
-		if ((error = get_passwd_home(&env, euid)) == 0)
+		/*
+		 * DO NOT UPSTREAM. This is safe to do in gitstatus because it
+		 * sets HOME to the effective user's home directory.
+		 */
+		if ((error = git__getenv(&env, "HOME")) == 0)
 			error = git_buf_joinpath(out, env.ptr, ".config/git");
 	}
 
@@ -299,7 +269,7 @@ static int git_sysdir_find_in_dirlist(
 
 done:
 	git_buf_dispose(path);
-	git_error_set(GIT_ERROR_OS, "the %s file '%s' doesn't exist", label, name);
+	git_error_set(GIT_ERROR_OS, "the %s file '%s' doesn't exist", label, name ? name : "NULL");
 	return GIT_ENOTFOUND;
 }
 
