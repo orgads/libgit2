@@ -996,7 +996,7 @@ static int multivar_iter_next(git_config_entry **entry, git_config_iterator *_it
 	return error;
 }
 
-void multivar_iter_free(git_config_iterator *_iter)
+static void multivar_iter_free(git_config_iterator *_iter)
 {
 	multivar_iter *iter = (multivar_iter *) _iter;
 
@@ -1223,9 +1223,6 @@ int git_config_lookup_map_value(
 {
 	size_t i;
 
-	if (!value)
-		goto fail_parse;
-
 	for (i = 0; i < map_n; ++i) {
 		const git_configmap *m = maps + i;
 
@@ -1234,7 +1231,7 @@ int git_config_lookup_map_value(
 		case GIT_CONFIGMAP_TRUE: {
 			int bool_val;
 
-			if (git__parse_bool(&bool_val, value) == 0 &&
+			if (git_config_parse_bool(&bool_val, value) == 0 &&
 				bool_val == (int)m->type) {
 				*out = m->map_value;
 				return 0;
@@ -1248,7 +1245,7 @@ int git_config_lookup_map_value(
 			break;
 
 		case GIT_CONFIGMAP_STRING:
-			if (strcasecmp(value, m->str_match) == 0) {
+			if (value && strcasecmp(value, m->str_match) == 0) {
 				*out = m->map_value;
 				return 0;
 			}
@@ -1256,7 +1253,6 @@ int git_config_lookup_map_value(
 		}
 	}
 
-fail_parse:
 	git_error_set(GIT_ERROR_CONFIG, "failed to map '%s'", value);
 	return -1;
 }
