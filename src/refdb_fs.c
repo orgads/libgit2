@@ -77,6 +77,7 @@ static int packref_cmp(const void *a_, const void *b_)
 static int packed_reload(refdb_fs_backend *backend)
 {
 	int error;
+	bool sorted = false;
 	git_buf packedrefs = GIT_BUF_INIT;
 	char *scan, *eof, *eol;
 
@@ -126,6 +127,8 @@ static int packed_reload(refdb_fs_backend *backend)
 				backend->peeling_mode = PEELING_STANDARD;
 			}
 
+			sorted = strstr(scan, " sorted ") != NULL;
+
 			scan = eol + 1;
 		}
 	}
@@ -155,7 +158,7 @@ static int packed_reload(refdb_fs_backend *backend)
 			eol[-1] = '\0';
 
     // don't scan refs > refs/tags/
-    if (git_refdb__disable_reading_packed_tags && strcmp(scan, "refs/tags/") > 0) break;
+    if (sorted && git_refdb__disable_reading_packed_tags && strcmp(scan, "refs/tags/") > 0) break;
 
 		if (git_sortedcache_upsert((void **)&ref, backend->refcache, scan) < 0)
 			goto parse_failed;
