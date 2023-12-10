@@ -693,6 +693,13 @@ static int GIT_STDLIB_CALL git__qsort_r_glue_cmp(
 	git__qsort_r_glue *glue = payload;
 	return glue->cmp(a, b, glue->payload);
 }
+
+static int GIT_STDLIB_CALL git__qsort_s_glue_cmp(
+	const void *a, const void *b, void *payload)
+{
+	git__qsort_r_glue *glue = payload;
+	return glue->cmp(a, b, glue->payload);
+}
 #endif
 
 
@@ -736,7 +743,7 @@ void git__qsort_r(
 	qsort_r(els, nel, elsize, cmp, payload);
 #elif defined(HAVE_QSORT_S)
 	git__qsort_r_glue glue = { cmp, payload };
-	qsort_s(els, nel, elsize, git__qsort_r_glue_cmp, &glue);
+	qsort_s(els, nel, elsize, git__qsort_s_glue_cmp, &glue);
 #else
 	insertsort(els, nel, elsize, cmp, payload);
 #endif
