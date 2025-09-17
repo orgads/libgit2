@@ -15,7 +15,7 @@
 
 /**
  * @file git2/diff.h
- * @brief Git tree and file differencing routines.
+ * @brief Indicate the differences between two versions of the repository
  * @ingroup Git
  * @{
  */
@@ -354,11 +354,6 @@ enum {
  *     - returns 0, the delta is inserted into the diff, and the diff process
  *		   continues.
  *
- * With GIT_DIFF_EXEMPLARS set:
- *   When the callback returns n:
- *     - n < 0 => abort.
- *     - (n & GIT_DIFF_DELTA_DO_NOT_INSERT) <=> do not insert.
- *     - (n & GIT_DIFF_DELTA_SKIP_TYPE) <=> do not notify on future diffs of the same type.
  */
 typedef int GIT_CALLBACK(git_diff_notify_cb)(
 	const git_diff *diff_so_far,
@@ -374,7 +369,8 @@ typedef int GIT_CALLBACK(git_diff_notify_cb)(
  * @param diff_so_far The diff being generated.
  * @param old_path The path to the old file or NULL.
  * @param new_path The path to the new file or NULL.
- * @return Non-zero to abort the diff.
+ * @param payload the user-specified callback payload
+ * @return 0 or an error code
  */
 typedef int GIT_CALLBACK(git_diff_progress_cb)(
 	const git_diff *diff_so_far,
@@ -492,10 +488,10 @@ typedef struct {
 	const char *range_end;
 } git_diff_options;
 
-/* The current version of the diff options structure */
+/** The current version of the diff options structure */
 #define GIT_DIFF_OPTIONS_VERSION 2
 
-/* Stack initializer for diff options.  Alternatively use
+/** Stack initializer for diff options.  Alternatively use
  * `git_diff_options_init` programmatic initialization.
  */
 #define GIT_DIFF_OPTIONS_INIT \
@@ -521,12 +517,14 @@ GIT_EXTERN(int) git_diff_options_init(
  * @param delta A pointer to the delta data for the file
  * @param progress Goes from 0 to 1 over the diff
  * @param payload User-specified pointer from foreach function
+ * @return 0 or an error code
  */
 typedef int GIT_CALLBACK(git_diff_file_cb)(
 	const git_diff_delta *delta,
 	float progress,
 	void *payload);
 
+/** Maximum size of the hunk header */
 #define GIT_DIFF_HUNK_HEADER_SIZE	128
 
 /**
@@ -587,6 +585,11 @@ typedef struct {
 /**
  * When iterating over a diff, callback that will be made for
  * binary content within the diff.
+ *
+ * @param delta the delta
+ * @param binary the binary content
+ * @param payload the user-specified callback payload
+ * @return 0 or an error code
  */
 typedef int GIT_CALLBACK(git_diff_binary_cb)(
 	const git_diff_delta *delta,
@@ -613,6 +616,11 @@ typedef struct {
 
 /**
  * When iterating over a diff, callback that will be made per hunk.
+ *
+ * @param delta the delta
+ * @param hunk the hunk
+ * @param payload the user-specified callback payload
+ * @return 0 or an error code
  */
 typedef int GIT_CALLBACK(git_diff_hunk_cb)(
 	const git_diff_delta *delta,
@@ -674,6 +682,12 @@ typedef struct {
  * When printing a diff, callback that will be made to output each line
  * of text.  This uses some extra GIT_DIFF_LINE_... constants for output
  * of lines of file and hunk headers.
+ *
+ * @param delta the delta that contains the line
+ * @param hunk the hunk that contains the line
+ * @param line the line in the diff
+ * @param payload the user-specified callback payload
+ * @return 0 or an error code
  */
 typedef int GIT_CALLBACK(git_diff_line_cb)(
 	const git_diff_delta *delta, /**< delta that contains this data */
@@ -831,7 +845,10 @@ typedef struct {
 	git_diff_similarity_metric *metric;
 } git_diff_find_options;
 
+/** Current version for the `git_diff_find_options` structure */
 #define GIT_DIFF_FIND_OPTIONS_VERSION 1
+
+/** Static constructor for `git_diff_find_options` */
 #define GIT_DIFF_FIND_OPTIONS_INIT {GIT_DIFF_FIND_OPTIONS_VERSION}
 
 /**
@@ -1325,10 +1342,10 @@ typedef struct {
 	git_oid_t oid_type;
 } git_diff_parse_options;
 
-/* The current version of the diff parse options structure */
+/** The current version of the diff parse options structure */
 #define GIT_DIFF_PARSE_OPTIONS_VERSION 1
 
-/* Stack initializer for diff parse options.  Alternatively use
+/** Stack initializer for diff parse options.  Alternatively use
  * `git_diff_parse_options_init` programmatic initialization.
  */
 #define GIT_DIFF_PARSE_OPTIONS_INIT \
@@ -1461,7 +1478,10 @@ typedef struct git_diff_patchid_options {
 	unsigned int version;
 } git_diff_patchid_options;
 
+/** Current version for the `git_diff_patchid_options` structure */
 #define GIT_DIFF_PATCHID_OPTIONS_VERSION 1
+
+/** Static constructor for `git_diff_patchid_options` */
 #define GIT_DIFF_PATCHID_OPTIONS_INIT { GIT_DIFF_PATCHID_OPTIONS_VERSION }
 
 /**
@@ -1499,8 +1519,7 @@ GIT_EXTERN(int) git_diff_patchid_options_init(
  */
 GIT_EXTERN(int) git_diff_patchid(git_oid *out, git_diff *diff, git_diff_patchid_options *opts);
 
-GIT_END_DECL
-
 /** @} */
+GIT_END_DECL
 
 #endif

@@ -8,9 +8,9 @@
 #include "futils.h"
 
 #include "runtime.h"
-#include "strmap.h"
 #include "hash.h"
 #include "rand.h"
+#include "hashmap_str.h"
 
 #include <ctype.h>
 
@@ -654,7 +654,8 @@ int git_futils_mkdir_relative(
 		*tail = '\0';
 		st.st_mode = 0;
 
-		if (opts->dir_map && git_strmap_exists(opts->dir_map, make_path.ptr))
+		if (opts->cache_pathset &&
+		    git_hashset_str_contains(opts->cache_pathset, make_path.ptr))
 			continue;
 
 		/* See what's going on with this path component */
@@ -689,17 +690,17 @@ retry_lstat:
 			make_path.ptr, &st, (lastch == '\0'), mode, flags, opts)) < 0)
 			goto done;
 
-		if (opts->dir_map && opts->pool) {
+		if (opts->cache_pathset && opts->cache_pool) {
 			char *cache_path;
 			size_t alloc_size;
 
 			GIT_ERROR_CHECK_ALLOC_ADD(&alloc_size, make_path.size, 1);
-			cache_path = git_pool_malloc(opts->pool, alloc_size);
+			cache_path = git_pool_malloc(opts->cache_pool, alloc_size);
 			GIT_ERROR_CHECK_ALLOC(cache_path);
 
 			memcpy(cache_path, make_path.ptr, make_path.size + 1);
 
-			if ((error = git_strmap_set(opts->dir_map, cache_path, cache_path)) < 0)
+			if ((error = git_hashset_str_add(opts->cache_pathset, cache_path)) < 0)
 				goto done;
 		}
 	}
@@ -1191,7 +1192,7 @@ int git_futils_filestamp_check_readonly(
 #if defined(GIT_USE_NSEC)
 		stamp->mtime.tv_nsec == st.st_mtime_nsec &&
 #endif
-		stamp->size  == (git_off_t)st.st_size   &&
+		stamp->size  == (uint64_t)st.st_size   &&
 		stamp->ino   == (unsigned int)st.st_ino)
 		return 0;
 
